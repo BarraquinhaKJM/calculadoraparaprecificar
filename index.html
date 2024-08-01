@@ -12,7 +12,7 @@
             <h2>Calculadora de Valor de Venda</h2>
             <label for="valorAtacado">Valor de Atacado (R$):</label>
             <input type="number" id="valorAtacado" step="0.01">
-            
+
             <div class="lucro-container">
                 <label for="valorLucro">Valor de Lucro (R$):</label>
                 <input type="number" id="valorLucro" step="0.01">
@@ -20,24 +20,10 @@
 
             <button id="addCostButton" onclick="adicionarCusto()">Adicionar Custo</button>
             <div id="custosContainer">
-                <!-- Exemplo de custo -->
-                <div class="custo-item">
-                    <div class="custo-header" onclick="toggleCustoDetails(this)">
-                        <span>Nome do Custo</span>
-                        <span class="toggle-icon">&#9660;</span>
-                    </div>
-                    <div class="custo-details">
-                        <p>Tipo do Custo: <span class="tipoCusto">Valor Fixo</span></p>
-                        <p>Valor (%): <span class="custoPercentual">0</span></p>
-                        <p>Valor (R$): <span class="custoValor">0.00</span></p>
-                        <button onclick="abrirEdicaoCusto(this)">Editar</button>
-                        <button onclick="removerCusto(this)">Excluir</button>
-                    </div>
-                </div>
             </div>
 
             <button onclick="calcularValorVenda()">Calcular Valor de Venda</button>
-            
+
             <div class="result" id="resultado" style="display: none;">
                 <span>Valor de Venda: </span>
                 <span id="valorVenda"></span>
@@ -97,7 +83,9 @@
     </div>
 
     <script>
-        let linhaEdicaoAtual = null;
+        document.addEventListener('DOMContentLoaded', (event) => {
+            loadState();
+        });
 
         function adicionarCusto() {
             const custosContainer = document.getElementById('custosContainer');
@@ -117,11 +105,13 @@
                 </div>
             `;
             custosContainer.appendChild(newCusto);
+            saveState();
         }
 
         function removerCusto(button) {
             const custoItem = button.parentElement.parentElement;
             custoItem.remove();
+            saveState();
         }
 
         function toggleCustoDetails(header) {
@@ -184,6 +174,7 @@
             linhaEdicaoAtual.querySelector('.custoValor').innerText = valorFixo;
 
             fecharEdicaoCusto();
+            saveState();
         }
 
         function calcularValorVenda() {
@@ -228,6 +219,8 @@
 
             resultadoElement.style.display = 'block';
             formulaElement.style.display = 'block';
+
+            saveState();
         }
 
         function toggleDescription() {
@@ -247,6 +240,64 @@
             }
 
             container.classList.toggle('flipped');
+        }
+
+        function saveState() {
+            const valorAtacado = document.getElementById('valorAtacado').value;
+            const valorLucro = document.getElementById('valorLucro').value;
+            const habilitarComissao = document.getElementById('habilitarComissao').checked;
+            const percentualComissao = document.getElementById('percentualComissao').value;
+
+            const custos = [];
+            const custoItems = document.querySelectorAll('.custo-item');
+            custoItems.forEach((item) => {
+                const tipoCusto = item.querySelector('.tipoCusto').innerText;
+                const nomeCusto = item.querySelector('.custo-header span:first-child').innerText;
+                const custoPercentual = item.querySelector('.custoPercentual').innerText;
+                const custoValor = item.querySelector('.custoValor').innerText;
+                custos.push({ tipoCusto, nomeCusto, custoPercentual, custoValor });
+            });
+
+            const state = {
+                valorAtacado,
+                valorLucro,
+                habilitarComissao,
+                percentualComissao,
+                custos
+            };
+
+            localStorage.setItem('calculatorState', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const state = JSON.parse(localStorage.getItem('calculatorState'));
+            if (state) {
+                document.getElementById('valorAtacado').value = state.valorAtacado;
+                document.getElementById('valorLucro').value = state.valorLucro;
+                document.getElementById('habilitarComissao').checked = state.habilitarComissao;
+                document.getElementById('percentualComissao').value = state.percentualComissao;
+
+                const custosContainer = document.getElementById('custosContainer');
+                custosContainer.innerHTML = '';
+                state.custos.forEach((custo) => {
+                    const newCusto = document.createElement('div');
+                    newCusto.classList.add('custo-item');
+                    newCusto.innerHTML = `
+                        <div class="custo-header" onclick="toggleCustoDetails(this)">
+                            <span>${custo.nomeCusto}</span>
+                            <span class="toggle-icon">&#9660;</span>
+                        </div>
+                        <div class="custo-details">
+                            <p>Tipo do Custo: <span class="tipoCusto">${custo.tipoCusto}</span></p>
+                            <p>Valor (%): <span class="custoPercentual">${custo.custoPercentual}</span></p>
+                            <p>Valor (R$): <span class="custoValor">${custo.custoValor}</span></p>
+                            <button onclick="abrirEdicaoCusto(this)">Editar</button>
+                            <button onclick="removerCusto(this)">Excluir</button>
+                        </div>
+                    `;
+                    custosContainer.appendChild(newCusto);
+                });
+            }
         }
     </script>
 </body>
