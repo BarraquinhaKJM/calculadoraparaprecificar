@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Valor de Venda</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="calculator">
+            <h2>Calculadora de Valor de Venda</h2>
+            <label for="valorAtacado">Valor de Atacado (R$):</label>
+            <input type="number" id="valorAtacado" step="0.01">
+            
+            <div class="lucro-container">
+                <label for="valorLucro">Valor de Lucro (R$):</label>
+                <input type="number" id="valorLucro" step="0.01">
+            </div>
+
+            <button id="addCostButton" onclick="adicionarCusto()">Adicionar Custo</button>
+            <div id="custosContainer">
+                <!-- Exemplo de custo -->
+                <div class="custo-item">
+                    <div class="custo-header" onclick="toggleCustoDetails(this)">
+                        <span>Nome do Custo</span>
+                        <span class="toggle-icon">&#9660;</span>
+                    </div>
+                    <div class="custo-details">
+                        <p>Tipo do Custo: <span class="tipoCusto">Valor Fixo</span></p>
+                        <p>Valor (%): <span class="custoPercentual">0</span></p>
+                        <p>Valor (R$): <span class="custoValor">0.00</span></p>
+                        <button onclick="abrirEdicaoCusto(this)">Editar</button>
+                        <button onclick="removerCusto(this)">Excluir</button>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="calcularValorVenda()">Calcular Valor de Venda</button>
+            
+            <div class="result" id="resultado" style="display: none;">
+                <span>Valor de Venda: </span>
+                <span id="valorVenda"></span>
+                <br>
+                <span>Percentual de Lucro: </span>
+                <span id="percentualLucro"></span>
+            </div>
+            <div class="result" id="formula" style="display: none;"></div>
+        </div>
+
+        <div class="description">
+            <h2>Como Usar (?)</h2>
+            <h3>Descrição da Calculadora:</h3>
+            <p>
+                A calculadora ajuda a determinar o preço de venda de um produto. Insira o valor de atacado, defina o frete, configure o lucro (valor fixo), adicione outros custos e clique em "Calcular Valor de Venda".
+            </p>
+            <h3>Passos:</h3>
+            <p>
+                1. <b>Valor de Atacado</b>: Insira o custo de aquisição.<br>
+                2. <b>Frete</b>: Ajuste o valor conforme necessário.<br>
+                3. <b>Valor de Lucro</b>: Insira o valor de lucro desejado.<br>
+                4. <b>Outros Custos</b>: Adicione custos adicionais.<br>
+                5. <b>Calcular</b>: Clique para obter o preço de venda e o percentual de lucro.
+            </p>
+            <h3>Configurações:</h3>
+            <label for="habilitarComissao">
+                <input type="checkbox" id="habilitarComissao" checked>
+                Habilitar Comissão
+            </label>
+            <br>
+            <label for="percentualComissao">Percentual de Comissão (%):</label>
+            <input type="number" id="percentualComissao" step="0.01" value="14">
+            <button onclick="toggleDescription()">Voltar</button>
+        </div>
+
+        <button id="howToUseButton" onclick="toggleDescription()">Como Usar (?)</button>
+    </div>
+
+    <!-- Modal para edição de custos -->
+    <div id="modalEdicao" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharEdicaoCusto()">&times;</span>
+            <h2>Editar Custo</h2>
+            <label for="editTipoCusto">Tipo do Custo</label>
+            <select id="editTipoCusto" onchange="atualizarTipoCustoModal(this)">
+                <option value="valor">Valor Fixo</option>
+                <option value="percentual">Percentual</option>
+            </select>
+            <label for="editNomeCusto">Nome do Custo</label>
+            <input type="text" id="editNomeCusto">
+            <label for="editCustoPercentual">Valor (%)</label>
+            <input type="number" id="editCustoPercentual" step="0.01" style="display: none;">
+            <label for="editCustoValor">Valor (R$)</label>
+            <input type="number" id="editCustoValor" step="0.01">
+            <button onclick="salvarEdicaoCusto()">Salvar</button>
+        </div>
+    </div>
+
+    <script>
+        let linhaEdicaoAtual = null;
+
+        function adicionarCusto() {
+            const custosContainer = document.getElementById('custosContainer');
+            const newCusto = document.createElement('div');
+            newCusto.classList.add('custo-item');
+            newCusto.innerHTML = `
+                <div class="custo-header" onclick="toggleCustoDetails(this)">
+                    <span>Nome do Custo</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div class="custo-details">
+                    <p>Tipo do Custo: <span class="tipoCusto">Valor Fixo</span></p>
+                    <p>Valor (%): <span class="custoPercentual">0</span></p>
+                    <p>Valor (R$): <span class="custoValor">0.00</span></p>
+                    <button onclick="abrirEdicaoCusto(this)">Editar</button>
+                    <button onclick="removerCusto(this)">Excluir</button>
+                </div>
+            `;
+            custosContainer.appendChild(newCusto);
+        }
+
+        function removerCusto(button) {
+            const custoItem = button.parentElement.parentElement;
+            custoItem.remove();
+        }
+
+        function toggleCustoDetails(header) {
+            const details = header.nextElementSibling;
+            const icon = header.querySelector('.toggle-icon');
+            if (details.style.display === 'none' || details.style.display === '') {
+                details.style.display = 'block';
+                icon.innerHTML = '&#9650;';
+            } else {
+                details.style.display = 'none';
+                icon.innerHTML = '&#9660;';
+            }
+        }
+
+        function abrirEdicaoCusto(button) {
+            linhaEdicaoAtual = button.parentElement.parentElement;
+
+            const tipoCusto = linhaEdicaoAtual.querySelector('.tipoCusto').innerText;
+            const nomeCusto = linhaEdicaoAtual.querySelector('.custo-header span:first-child').innerText;
+            const valorPercentual = linhaEdicaoAtual.querySelector('.custoPercentual').innerText;
+            const valorFixo = linhaEdicaoAtual.querySelector('.custoValor').innerText;
+
+            document.getElementById('editTipoCusto').value = tipoCusto === 'Valor Fixo' ? 'valor' : 'percentual';
+            document.getElementById('editNomeCusto').value = nomeCusto;
+            document.getElementById('editCustoPercentual').value = valorPercentual;
+            document.getElementById('editCustoValor').value = valorFixo;
+
+            atualizarTipoCustoModal(document.getElementById('editTipoCusto'));
+
+            document.getElementById('modalEdicao').style.display = 'block';
+        }
+
+        function fecharEdicaoCusto() {
+            document.getElementById('modalEdicao').style.display = 'none';
+            linhaEdicaoAtual = null;
+        }
+
+        function atualizarTipoCustoModal(selectElement) {
+            const custoPercentual = document.getElementById('editCustoPercentual');
+            const custoValor = document.getElementById('editCustoValor');
+
+            if (selectElement.value === 'percentual') {
+                custoPercentual.style.display = 'block';
+                custoValor.style.display = 'none';
+            } else {
+                custoPercentual.style.display = 'none';
+                custoValor.style.display = 'block';
+            }
+        }
+
+        function salvarEdicaoCusto() {
+            const tipoCusto = document.getElementById('editTipoCusto').value;
+            const nomeCusto = document.getElementById('editNomeCusto').value;
+            const valorPercentual = document.getElementById('editCustoPercentual').value;
+            const valorFixo = document.getElementById('editCustoValor').value;
+
+            linhaEdicaoAtual.querySelector('.tipoCusto').innerText = tipoCusto === 'valor' ? 'Valor Fixo' : 'Percentual';
+            linhaEdicaoAtual.querySelector('.custo-header span:first-child').innerText = nomeCusto;
+            linhaEdicaoAtual.querySelector('.custoPercentual').innerText = valorPercentual;
+            linhaEdicaoAtual.querySelector('.custoValor').innerText = valorFixo;
+
+            fecharEdicaoCusto();
+        }
+
+        function calcularValorVenda() {
+            const valorAtacado = parseFloat(document.getElementById('valorAtacado').value);
+            const valorLucro = parseFloat(document.getElementById('valorLucro').value);
+            const percentualComissao = parseFloat(document.getElementById('percentualComissao').value) / 100;
+
+            let outrosCustosFixos = 0;
+            let outrosCustosPercentuais = 0;
+
+            // Somar custos fixos
+            const custoValores = document.querySelectorAll('.custoValor');
+            custoValores.forEach((custo) => {
+                outrosCustosFixos += parseFloat(custo.innerText);
+            });
+
+            // Somar custos percentuais
+            const custoPercentuais = document.querySelectorAll('.custoPercentual');
+            custoPercentuais.forEach((custo) => {
+                outrosCustosPercentuais += parseFloat(custo.innerText) / 100;
+            });
+
+            if (isNaN(valorAtacado) || isNaN(valorLucro)) {
+                alert('Por favor, insira valores válidos.');
+                return;
+            }
+
+            const custoTotal = valorAtacado + outrosCustosFixos;
+            const percentualTotal = 1 - (percentualComissao + outrosCustosPercentuais);
+
+            const valorVenda = (custoTotal + valorLucro) / percentualTotal;
+            const lucroPercentual = (valorLucro / valorAtacado) * 100;
+
+            const resultadoElement = document.getElementById('resultado');
+            const valorVendaElement = document.getElementById('valorVenda');
+            const percentualLucroElement = document.getElementById('percentualLucro');
+            const formulaElement = document.getElementById('formula');
+
+            valorVendaElement.innerText = `R$ ${valorVenda.toFixed(2)}`;
+            percentualLucroElement.innerText = `${lucroPercentual.toFixed(2)}%`;
+            formulaElement.innerText = `Fórmula: (${custoTotal} + ${valorLucro}) / ${percentualTotal.toFixed(2)}`;
+
+            resultadoElement.style.display = 'block';
+            formulaElement.style.display = 'block';
+        }
+
+        function toggleDescription() {
+            const container = document.querySelector('.container');
+            const calculator = document.querySelector('.calculator');
+            const description = document.querySelector('.description');
+            const howToUseButton = document.getElementById('howToUseButton');
+
+            if (calculator.style.display === 'none') {
+                calculator.style.display = 'block';
+                description.style.display = 'none';
+                howToUseButton.style.display = 'block';
+            } else {
+                calculator.style.display = 'none';
+                description.style.display = 'block';
+                howToUseButton.style.display = 'none';
+            }
+
+            container.classList.toggle('flipped');
+        }
+    </script>
+</body>
+</html>
