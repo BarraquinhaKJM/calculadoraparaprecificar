@@ -7,7 +7,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     perspective: 1000px;
 }
 
@@ -31,6 +31,7 @@ body {
 
 .calculator, .description {
     backface-visibility: hidden;
+    height: auto;
 }
 
 .description {
@@ -92,7 +93,7 @@ button:hover {
     width: 28%;
 }
 
-#addCostButton {
+#addCostButton, #deleteSelectedButton {
     width: 100%;
 }
 
@@ -217,4 +218,26 @@ button:hover {
     color: #000;
     text-decoration: none;
     cursor: pointer;
+}
+
+/* Estilos para a checkbox */
+.select-custo {
+    margin-right: 10px;
+}
+
+/* Botão para excluir selecionados */
+#deleteSelectedButton {
+    padding: 10px 20px;
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-block;
+    margin-top: 10px;
+    width: 100%;
+}
+
+#deleteSelectedButton:hover {
+    background-color: #c82333;
 }
