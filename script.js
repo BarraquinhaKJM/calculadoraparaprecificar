@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     monitorCheckboxes();
 });
 
+let linhaEdicaoAtual = null;
+
 function adicionarCusto() {
     const custosContainer = document.getElementById('custosContainer');
     const newCusto = document.createElement('div');
@@ -53,7 +55,7 @@ function abrirEdicaoCusto(button) {
     linhaEdicaoAtual = button.parentElement.parentElement;
 
     const tipoCusto = linhaEdicaoAtual.querySelector('.tipoCusto').innerText;
-    const nomeCusto = linhaEdicaoAtual.querySelector('.custo-header span:first-child').innerText;
+    const nomeCusto = linhaEdicaoAtual.querySelector('.custo-header span:nth-child(2)').innerText;
     const valorPercentual = linhaEdicaoAtual.querySelector('.custoPercentual').innerText;
     const valorFixo = linhaEdicaoAtual.querySelector('.custoValor').innerText;
 
@@ -92,7 +94,7 @@ function salvarEdicaoCusto() {
     const valorFixo = document.getElementById('editCustoValor').value;
 
     linhaEdicaoAtual.querySelector('.tipoCusto').innerText = tipoCusto === 'valor' ? 'Valor Fixo' : 'Percentual';
-    linhaEdicaoAtual.querySelector('.custo-header span:first-child').innerText = nomeCusto;
+    linhaEdicaoAtual.querySelector('.custo-header span:nth-child(2)').innerText = nomeCusto;
     linhaEdicaoAtual.querySelector('.custoPercentual').innerText = valorPercentual;
     linhaEdicaoAtual.querySelector('.custoValor').innerText = valorFixo;
 
@@ -182,7 +184,7 @@ function saveState() {
     const custoItems = document.querySelectorAll('.custo-item');
     custoItems.forEach((item) => {
         const tipoCusto = item.querySelector('.tipoCusto').innerText;
-        const nomeCusto = item.querySelector('.custo-header span:first-child').innerText;
+        const nomeCusto = item.querySelector('.custo-header span:nth-child(2)').innerText;
         const custoPercentual = item.querySelector('.custoPercentual').innerText;
         const custoValor = item.querySelector('.custoValor').innerText;
         custos.push({ tipoCusto, nomeCusto, custoPercentual, custoValor });
